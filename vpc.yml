@@ -9,3 +9,5 @@
       name: myvpc
       cidr_block: 172.16.0.0/24
       region: us-east-2
+      aws_access_key: AKIAWBLG26NJDDMRAJ3N
+      aws_secret_key: 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
