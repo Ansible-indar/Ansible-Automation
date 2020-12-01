@@ -1,0 +1,10 @@
+pipeline{
+  agent any
+    stages{
+      stage('ansible playbook'){
+        steps{
+          sh "ansible-playbook vpc.yml"
+        }
+     }
+  }
+}

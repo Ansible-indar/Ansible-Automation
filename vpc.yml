@@ -1,0 +1,11 @@
+---
+
+- hosts: localhost
+  gather_facts: yes
+  tasks:
+  - name: create new vpc
+    ec2_vpc_net:
+      state: present
+      name: myvpc
+      cidr_block: 172.16.0.0/24
+      region: us-east-2
