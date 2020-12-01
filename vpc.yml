@@ -2,6 +2,7 @@
 
 - hosts: localhost
   gather_facts: yes
+
   tasks:
   - name: create new vpc
     ec2_vpc_net:
@@ -9,5 +10,32 @@
       name: myvpc
       cidr_block: 172.16.0.0/24
       region: us-east-2
-      aws_access_key: AKIAWBLG26NJDDMRAJ3N
-      aws_secret_key: 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
+
+
+  - name: TO DISPLAY VPC_ID
+    command: aws ec2 describe-vpcs --filter Name=tag:Name,Values=myvpc --query Vpcs[].VpcId --output text
+    register: VPC_ID
+
+    #      - debug: var=VPC_ID.stdout
+  - debug: 
+      msg: echo "{{VPC_ID.stdout}}"
+
+  - name: create subnet
+    ec2_vpc_subnet:
+      state: present
+      vpc_id: "{{VPC_ID.stdout}}"
+      cidr: 172.16.0.0/24
+      tags:
+        Name: Database Subnet
+    register: database_subnet
+
+  - name: to display subnet id
+    command:  aws ec2 describe-subnets --filter Name=tag:Name,Values="Database Subnet" --query Subnets[].SubnetId 
+    register: sub_id
+
+  - debug: var=sub_id.stdout 
+
+
+      
+
+
