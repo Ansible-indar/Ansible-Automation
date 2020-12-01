@@ -25,6 +25,7 @@
       state: present
       vpc_id: "{{VPC_ID.stdout}}"
       cidr: 172.16.0.0/24
+      map_public: yes
       tags:
         Name: Database Subnet
     register: database_subnet
@@ -36,6 +37,15 @@
   - debug: var=sub_id.stdout 
 
 
+  - name: create internet gateway for vpc
+    ec2_vpc_igw:
+      vpc_id: "{{VPC_ID.stdout}}"
+      state: present
+      tags:
+        Name: myigw
       
+  - name: list myigw id
+    command: aws ec2 describe-internet-gateways --filter Name=tag:Name,Values=myigw --query InternetGateways[].InternetGatewayId
+    register: myigw_id
 
-
+  - debug: var=myigw_id.stdout
