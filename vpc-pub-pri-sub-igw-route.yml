@@ -15,7 +15,7 @@
       region: us-east-2
       tags:
         name: testing     
-      tenancy: dedicated
+      tenancy: default
   - name: to get the new vpc id 
     command: aws ec2 describe-vpcs --filter Name=tag:Name,Values=pubvpc --query Vpcs[].VpcId --output text
     register: vpc_id
