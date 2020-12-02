@@ -1,0 +1,76 @@
+---
+
+- hosts: localhost
+  gather_facts: true
+  vars:
+    cidr: 10.0.0.0/24
+    sub1: 10.0.0.0/28
+    sub2: 10.0.0.16/28
+
+  tasks:
+  - name: create vpc
+    ec2_vpc_net:
+      name: pubvpc
+      cidr_block: "{{cidr}}"
+      region: us-east-2
+      tags:
+        name: testing     
+      tenancy: dedicated
+  - name: to get the new vpc id 
+    command: aws ec2 describe-vpcs --filter Name=tag:Name,Values=pubvpc --query Vpcs[].VpcId --output text
+    register: vpc_id
+ 
+  - debug:
+      msg: "{{vpc_id.stdout}}"
+
+  - name: create public subnet
+    ec2_vpc_subnet:
+      state: present
+      vpc_id: "{{vpc_id.stdout}}"
+      cidr: "{{ sub1 }}"
+      map_public: yes
+      tags:
+        Name: pub_sub1
+    register: pubsub_id
+  
+  - name: to get the pub sub id
+    command: aws ec2 describe-subnets --filter Name=tag:Name,Values="pub_sub1" --query Subnets[].SubnetId --output text
+    register: pub_id
+      
+  - name: create private subnet
+    ec2_vpc_subnet:
+      state: present
+      vpc_id: "{{vpc_id.stdout}}"
+      cidr: "{{ sub2 }}"
+      tags:
+        Name: pri_sub2
+    register: prisub_id
+
+  - name: to get the pub sub id
+    command: aws ec2 describe-subnets --filter Name=tag:Name,Values="pri_sub2" --query Subnets[].SubnetId --output text
+    register: pri_id
+   
+  - name: create igw for vpc
+    ec2_vpc_igw:
+      vpc_id: "{{vpc_id.stdout}}"
+      state: present
+      tags:
+        name: myigw
+    register: igw
+
+  - name: to get igw id
+    command: aws ec2 describe-internet-gateways --filter Name=tag:name,Values=myigw --query InternetGateways[].InternetGatewayId --output text
+    register: igw_id
+
+  - name: Set up public subnet route table
+    ec2_vpc_route_table:
+      vpc_id: "{{vpc_id.stdout}}"
+      region: us-east-2
+      tags:
+        Name: Public
+      subnets:
+        - "{{ pub_id.stdout }}"
+      routes:
+        - dest: 0.0.0.0/0
+          gateway_id: "{{ igw_id.stdout }}"
+    register: public_route_table
